@@ -12,7 +12,7 @@ def data_path(filename):
 def test_multispec_linear_spline():
     pytest.importorskip("scipy")
     filename = data_path("spline.fits")
-    spectra = read_fits.read_fits_multispec_to_list(filename)
+    spectra = read_fits.read_fits_spectrum1d(filename)
     c1 = np.array([8.61795084, 5.18731657, 0.78303947, 8.60234236,
                    9.65883078, 9.86579257, 8.2952905, 1.47467708,
                    7.86243508, 4.54125793, 7.96101273])
@@ -21,7 +21,7 @@ def test_multispec_linear_spline():
     pmax = 2304
     pixels = np.arange(pmin, pmax + 1) * 1.0
     s = (pixels - pmin) / (pmax - pmin) * npieces
-    j = np.array(map(int, s))
+    j = s.astype(int)
     a = (j + 1) - s
     b = s - j
     w1 = np.take(c1, j, mode='clip') * a + np.take(c1, 1 + j, mode='clip') * b
@@ -34,7 +34,7 @@ def test_multispec_linear_spline():
 def test_multispec_cubic_spline():
     pytest.importorskip("scipy")
     filename = data_path("spline.fits")
-    spectra = read_fits.read_fits_multispec_to_list(filename)
+    spectra = read_fits.read_fits_spectrum1d(filename)
     npieces = 10
     pmin = 1
     pmax = 2304
