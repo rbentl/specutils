@@ -2,6 +2,7 @@
 # This module implements the Spectrum1D class.
 
 from __future__ import print_function, division
+from specutils.models.Indexer import Indexer
 
 __all__ = ['Spectrum1D']
 
@@ -64,7 +65,7 @@ class Spectrum1D(NDData):
                       'frequency': {'unit': u.Hz},
                       'energy': {'unit': u.J},
                       'velocity': {'unit': u.m/u.s}}
-    
+
     @classmethod
     def from_array(cls, dispersion, flux, dispersion_unit=None, uncertainty=None, mask=None,
                    flags=None, meta=None, copy=True,
@@ -117,7 +118,17 @@ class Spectrum1D(NDData):
         """
         
         if dispersion.ndim != 1 or dispersion.shape != flux.shape:
-            raise ValueError("dispersion and flux need to be one-dimensional Numpy arrays with the same shape")
+            raise ValueError("dispersion and flux need to be one-dimensional "
+                             "Numpy arrays with the same shape")
+
+        if hasattr(dispersion, 'unit'):
+            if dispersion_unit is not None:
+                dispersion = dispersion.to(dispersion_unit).value
+            else:
+                dispersion_unit = dispersion.unit
+                dispersion = dispersion.value
+
+
         spec_wcs = Spectrum1DLookupWCS(dispersion, unit=dispersion_unit)
 
         if copy:
@@ -202,12 +213,17 @@ class Spectrum1D(NDData):
         raise NotImplementedError('This function is not implemented. To read FITS files please refer to the'
                                   ' documentation')
 
-    def __init__(self, flux, wcs, unit=None, uncertainty=None, mask=None, flags=None, meta=None):
+    def __init__(self, flux, wcs, unit=None, uncertainty=None, mask=None,
+                 flags=None, meta=None, indexer=None):
 
-        super(Spectrum1D, self).__init__(data=flux, wcs=wcs, unit=unit, uncertainty=uncertainty,
+        super(Spectrum1D, self).__init__(data=flux, unit=unit, wcs=wcs, uncertainty=uncertainty,
                    mask=mask, flags=flags, meta=meta)
 
         self._wcs_attributes = copy.deepcopy(self.__class__._wcs_attributes)
+        if indexer is None:
+            self.indexer = Indexer(0, len(flux))
+        else:
+            self.indexer = indexer
         for key in list(self._wcs_attributes):
 
             wcs_attribute_unit = self._wcs_attributes[key]['unit']
@@ -226,6 +242,23 @@ class Spectrum1D(NDData):
             if wcs_attribute_unit.physical_type == self.wcs.unit.physical_type:
                 self._wcs_attributes[key]['unit'] = self.wcs.unit
 
+
+    def flux_getter(self):
+        #returning the flux
+        return u.Quantity(self.data, self.unit)
+
+    def flux_setter(self, flux):
+        if hasattr(flux, 'unit'):
+            if self.unit is not None:
+                flux = flux.to(self.unit).value
+            else:
+                raise ValueError('Attempting to set a new unit for this object'
+                                 'this is not allowed by Spectrum1D')
+
+        self.data = flux
+
+
+    flux = property(flux_getter, flux_setter)
 
     def __getattr__(self, name):
         if name in self._wcs_attributes:
@@ -246,24 +279,15 @@ class Spectrum1D(NDData):
         return list(self.__dict__.keys()) + list(self._wcs_attributes.keys()) + \
                [item + '_unit' for item in self._wcs_attributes.keys()]
 
-    
-    @property
-    def flux(self):
-        #returning the flux
-        return self.data
-        
-    @flux.setter
-    def flux_setter(self, flux):
-        self.data = flux
+
+
 
     #TODO: let the WCS handle what to do with len(flux)
     @property
     def dispersion(self):
         #returning the disp
-        if not hasattr(self.wcs, 'lookup_table'):
-            self.wcs.lookup_table = self.wcs(np.arange(len(self.flux)))
-
-        return self.wcs.lookup_table
+        pixel_indices = np.arange(len(self.flux))
+        return self.wcs(self.indexer(pixel_indices))
 
     @property
     def dispersion_unit(self):
@@ -371,16 +395,17 @@ class Spectrum1D(NDData):
         #return self.slice_index(start_index, stop_index)
     
     
-    def slice_index(self, start=None, stop=None):
+    def slice_index(self, start=None, stop=None, step=None):
         """Slice the spectrum within a given start and end index.
         
         Parameters
         ----------
-        start : `float`
+        start : int
             Starting slice point.
-        stop : `float`
+        stop : int
             Stopping slice point.
-        
+        step : int
+            Slice step
         Notes
         -----
         Often it is useful to slice out a portion of a `Spectrum1D` objects
@@ -397,6 +422,40 @@ class Spectrum1D(NDData):
         # Which are all common NDData objects, therefore I am (perhaps
         # reasonably) assuming that __slice__ will be a NDData base function
         # which we will inherit.
-        raise NotImplementedError('Will presumeably implemented in core NDDATA,'
-                                  'though this is just trivial indexing.')
-        return self[start:stop]
+        # At this time, that function raises an error if WCS is not None, so it
+        # cannot be used
+        item = slice(start, stop, step)
+        new_data = self.data[item]
+
+        if self.uncertainty is not None:
+            new_uncertainty = self.uncertainty[item]
+        else:
+            new_uncertainty = None
+
+        if self.mask is not None:
+            new_mask = self.mask[item]
+            # mask setter expects an array, always
+            if new_mask.shape == ():
+                new_mask = np.array(new_mask)
+        else:
+            new_mask = None
+
+        if self.flags is not None:
+            if isinstance(self.flags, np.ndarray):
+                new_flags = self.flags[item]
+                # flags setter expects an array, always
+                if new_flags.shape == ():
+                    new_flags = np.array(new_flags)
+            elif isinstance(self.flags, FlagCollection):
+                raise NotImplementedError('Slicing complex Flags is currently not implemented')
+        else:
+            new_flags = None
+
+        new_indexer = self.indexer.__getitem__(item)
+        new_wcs = self.wcs
+
+        return self.__class__(new_data, new_wcs, meta=self.meta, unit=self.unit
+                              , uncertainty=new_uncertainty, mask=new_mask,
+                              flags=new_flags, indexer=new_indexer)
+
+

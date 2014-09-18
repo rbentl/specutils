@@ -18,9 +18,13 @@ There are several ways to instantiate a :class:`Spectrum1D` object::
     >>> from astropy import units as u
     >>> import numpy as np
     >>> wave = np.arange(6000, 9000) * u.Angstrom
-    >>> flux = np.random.random(3000) # due to current limitations in NDData, a quantity can not be given
-    >>> spec1d = Spectrum1D.from_array(wave, flux, unit='W m-2 angstrom-1 sr-1')
-
+    >>> flux = np.random.random(3000) * u.Unit('W m-2 angstrom-1 sr-1')
+    >>> spec1d = Spectrum1D.from_array(wave, flux)
+    >>> spec1d.wavelength
+    <Quantity [ 6000., 6001., 6002.,...,  8997., 8998., 8999.] Angstrom>
+    >>> spec1d.flux
+    <Quantity [ 0.75639906, 0.23677036, 0.08408417,...,  0.82740303,
+            0.38345114, 0.77815595] W / (Angstrom m2 sr)>
 
 The ability to instantiate from any two arrays allows to load from ascii files (see `astropy.io.ascii <http://docs.astropy.org/en/stable/io/ascii/index.html>`_)
 and other data structures like `~numpy.recarray` and `~astropy.table.Table`.
@@ -54,8 +58,27 @@ Once a spectrum is instantiated, one can access the `flux`, `wavelength`, `frequ
     array([ 0.34272852,  0.92834782,  0.64680224, ...,  0.03348069,
             0.10291822,  0.33614334])
 
-To learn more about the WCS transforms please go to :doc:`the WCS documentation page <specwcs>`. In many cases, spectra are stored in FITS files.
-FITS readers are documented at :doc:`the FITS WCS documentation page <fits_wcs>`.
+A spectrum1D object can also be sliced using `slice_index` method. This method accepts the start, stop and step for
+a slice. This slice works similar to the python-like slicing for lists::
+
+    >>> alternate_spec1d = spec1d.slice_index(step=2)
+    >>> alternate_spec1d.dispersion
+    array([ 6000.,  6002.,  6004., ...,  8994.,  8996.,  8998.])
+    >>> alternate_spec1d.flux
+    array([ 0.53091768,  0.81469917,  0.85442559, ...,  0.74203082, 0.453299,  0.21887765])
+    >>> reverse_spec1d = spec1d.slice_index(step=-1)
+    >>> reverse_spec1d.dispersion
+    array([ 8999.,  8998.,  8997., ...,  6002.,  6001.,  6000.])
+    >>> mixed_spec1d = reverse_spec1d.slice_index(start=101, stop=2500, step=2)
+    >>> mixed_spec1d.dispersion
+    array([ 8898.,  8896.,  8894., ...,  6504.,  6502.,  6500.])
+    
+If not provided, this method makes the same assumptions about start, stop and step as slicing for python lists. `slice_index` is used to
+slice a spectrum from its indices. The start, stop and step represent indices at which dispersion, flux and other quantities are computed.
+In future, it might be possible to slice at a particular dispersion or flux value, thus the distinction.
+
+To learn more about the WCS transformations please go to :doc:`the WCS documentation page <specwcs>`. In many cases, spectra are stored in FITS files.
+FITS readers and writers are documented at :doc:`FITS reader docs<read_fits>` and :doc:`FITS writer docs<write_fits>`..
 
 .. automodapi:: specutils
     :no-inheritance-diagram:
