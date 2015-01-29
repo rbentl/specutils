@@ -2,9 +2,10 @@ import numpy as np
 from scipy import signal
 from scipy import interpolate
 import pylab as pl
+import os
 
-
-def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14):
+def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,
+               vel=0.0,spec_wave=None,spec_flux=None):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -21,14 +22,35 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     2014-02-19 -- T. Do
     '''
 
+
     if linelist is None:
-        # hydrogen lines in microns
-        hlines = np.array([1.00521, 1.09411, 1.28216, 1.52647, 1.58848, 1.61137,1.64117,1.68111,1.81791,1.87561,1.94509])
-        hlinesNames = [r'HI (Pa $\delta$)', r'HI (Pa $\gamma$)',r'HI (Pa $\beta$)',
-                       'HI', 'HI', 'HI', 'HI','HI','HI',r'HI (Pa $\alpha$)',
-                       'HI (Br $\delta$)']
-        helines = np.array([1.01264, 1.0833,1.16296, 1.16764,1.69230,1.70076])
-        helinesNames = ['HeII', 'HeI','HeII','HeII','HeII','HeI','HeII']
+        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list.txt')
+
+    totalLines, n1, n2 = np.loadtxt(linelist,unpack=True,dtype=str)
+    totalLines = np.array(totalLines,dtype=float)
+    totalNames = np.copy(n1)
+    for i in np.arange(len(n1)):
+        totalNames[i] = n1[i]+' '+n2[i]
+
+    ## if linelist is None:
+    ##     # hydrogen lines in microns
+    ##     hlines = np.array([1.00521, 1.09411, 1.28216, 1.52647, 1.58848, 1.61137,1.64117,1.68111,1.81791,1.87561,1.94509])
+    ##     hlinesNames = [r'HI (Pa $\delta$)', r'HI (Pa $\gamma$)',r'HI (Pa $\beta$)',
+    ##                    'HI', 'HI', 'HI', 'HI','HI','HI',r'HI (Pa $\alpha$)',
+    ##                    'HI (Br $\delta$)']
+    ##     helines = np.array([1.01264, 1.0833,1.16296, 1.16764,1.69230,1.70076])        
+    ##     helinesNames = ['HeII', 'HeI','HeII','HeII','HeII','HeI','HeII']
+        
+    ##     if angstrom:
+    ##         hlines = hlines*1e4
+    ##         helines = helines*1e4
+
+    ##     totalLines = np.append(hlines, helines)
+    ##     totalNames = np.append(hlinesNames, helinesNames)
+
+    ## if (linelist is None) & (bandname == 'K'):
+    ##     totalLines = [2.382950,2.373944,2.352460,2.345926,2.338552,2.335483,2.322686,2.293531,2.281407,2.265734,2.263114,2.261410,2.238689,2.208968,2.206244,2.166115,2.112602,2.058100,2.190379,2.188510,2.178934,2.116953,2.109878,2.106665,2.106549,2.092291,2.070398, 2.1885]
+    ##     totalNames = ['$^{12}\mathrm{CO}$', '$^{13}\mathrm{CO}$', '$^{12}\mathrm{CO}$', '$^{13}\mathrm{CO}$', 'Na I','Na I', '$^{12}\mathrm{CO}$', '$^{12}\mathrm{CO}$','Mg I', 'Ca I', 'Ca I', 'Ca I', 'Fe I',  'Na I', 'Na I','$\mathrm{Br}_{\gamma}$', 'He I', 'He I','Ti I','Si I','Ti I','Al I','Al I','Mg I','Mg I','Si I','Fe I','Ca I','Ca I','Ca I', 'Si I']
 
     # should have a plot already so get the current axes
     ax = pl.gca()
@@ -36,20 +58,31 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
         xlim = ax.get_xlim()
     if ylim is None:
         ylim = ax.get_ylim()
-    if angstrom:
-        hlines = hlines*1e4
-        helines = helines*1e4
 
-    totalLines = np.append(hlines, helines)
-    totalNames = np.append(hlinesNames, helinesNames)
-
+    # shift according to the velocity
+    totalLines = vel/3e5*totalLines+totalLines
+    
     goodRange = np.where((totalLines >= xlim[0]) & (totalLines <= xlim[1]))[0]
-
+    
     if len(goodRange) > 0:
         for i in goodRange:
-            pl.plot([totalLines[i],totalLines[i]],ylim,color)
-            if label:
-                pl.text(totalLines[i],(ylim[1]-ylim[0])*0.05+ylim[0],totalNames[i],rotation='vertical',size=size,va='bottom')
+            if (spec_wave is not None) & (spec_flux is not None):
+                idx = (np.abs(spec_wave - totalLines[i])).argmin()
+                delta = (ylim[1]-ylim[0])*0.04
+                deltaX = (xlim[1]-xlim[0])*0.004
+                pl.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color)
+                if label:
+                    pl.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
+                
+            else:
+                pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--')
+                if label:
+                    if (i % 2) == 0:
+                        yval = (ylim[1]-ylim[0])*0.05+ylim[0]
+                    else:
+                        yval = (ylim[1]-ylim[0])*0.08+ylim[0]
+                    pl.text(totalLines[i],yval,totalNames[i],rotation='vertical',size=size,va='bottom')
+                
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
     '''
@@ -100,7 +133,6 @@ def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='
 
     if band == 'K':
         #drop: 19751.3895, 19736.4099
-        print "the lines"
         lines = np.array([
         19518.4784 , 19593.2626 , 19618.5719 , 19642.4493 , 19678.046 ,
         19701.6455 , 19771.9063 , 19839.7764 ,
