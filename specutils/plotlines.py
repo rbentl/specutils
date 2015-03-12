@@ -5,7 +5,7 @@ import pylab as pl
 import os
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,
-               vel=0.0,spec_wave=None,spec_flux=None):
+               vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -24,11 +24,21 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     '''
 
 
-    totalLines, n1, n2 = np.loadtxt(linelist,unpack=True,dtype=str)
-    totalLines = np.array(totalLines,dtype=float)
-    totalNames = np.copy(n1)
-    for i in np.arange(len(n1)):
-        totalNames[i] = n1[i]+' '+n2[i]
+    if (lines is None) and (linelist is None):
+        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list.txt')
+
+    if lines is None:
+        totalLines, n1, n2 = np.loadtxt(linelist,unpack=True,dtype=str)
+        totalLines = np.array(totalLines,dtype=float)
+        totalNames = np.copy(n1)
+        for i in np.arange(len(n1)):
+            totalNames[i] = n1[i]+' '+n2[i]
+    else:
+        totalLines = lines
+        if line_names is None:
+            totalNames = np.full(len(totalLines),'',dtype=str)
+        else:
+            totalNames = line_names
 
     ## if linelist is None:
     ##     # hydrogen lines in microns
@@ -68,12 +78,12 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                 idx = (np.abs(spec_wave - totalLines[i])).argmin()
                 delta = (ylim[1]-ylim[0])*0.04
                 deltaX = (xlim[1]-xlim[0])*0.004
-                pl.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color)
+                pl.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
                     pl.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
                 
             else:
-                pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--')
+                pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--',alpha=alpha)
                 if label:
                     if (i % 2) == 0:
                         yval = (ylim[1]-ylim[0])*0.05+ylim[0]
