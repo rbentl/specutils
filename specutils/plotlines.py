@@ -28,11 +28,13 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
         linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list.txt')
 
     if lines is None:
-        totalLines, n1, n2 = np.loadtxt(linelist,unpack=True,dtype=str)
+        totalLines, n1, n2 = np.genfromtxt(linelist,unpack=True,dtype=str)
         totalLines = np.array(totalLines,dtype=float)
         totalNames = np.copy(n1)
         for i in np.arange(len(n1)):
             totalNames[i] = n1[i]+' '+n2[i]
+        if angstrom:
+            totalLines = totalLines*1e4
     else:
         totalLines = lines
         if line_names is None:
@@ -168,7 +170,7 @@ def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='
 
     if linelist is not None:
         lines = np.loadtxt(linelist)
-        print 'Loaded Line file %s ' % linelist
+        print('Loaded Line file %s ' % linelist)
     lines = np.array(lines)
 
     # should have a plot already so get the current axes
