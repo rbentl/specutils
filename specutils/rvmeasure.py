@@ -80,7 +80,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
             npsfPix = 4*int(delt)+1
             psf = gaussian([1.0,npsfPix/2,delt,0],np.arange(npsfPix),normalize=True)
             if debug:
-                print np.shape(psf)
+                print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn1 = signal.fftconvolve(specIn1,psf,mode='same')
             if debug:
@@ -90,7 +90,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
             npsfPix = 4*int(delt)+1
             psf = gaussian([1.0,npsfPix/2,delt,0],np.arange(npsfPix),normalize=True)
             if debug:
-                print np.shape(psf)
+                print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn2 = signal.fftconvolve(specIn2,psf,mode='same')
             if debug:
@@ -115,8 +115,8 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
                                       # the new log array
     # the wavelength samples of both spectra should be the same now
     if debug:
-        print 'wave1 start, end', wave1[0],wave1[-1]
-        print 'interp wave: ',linWave1[0],linWave1[-1]
+        print('wave1 start, end', wave1[0],wave1[-1])
+        print('interp wave: ',linWave1[0],linWave1[-1])
     logInterp1 = interpolate.interp1d(waveIn1,specIn1,bounds_error=False)
     logInterp2 = interpolate.interp1d(waveIn1,specIn2,bounds_error=False)
     logSpec1 = logInterp1(linWave1)
@@ -148,12 +148,12 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     shiftPeakVel = -(np.exp(shiftPeak*logInt)-1)*3e5
     
     if debug:
-        print 'logInt: '+str(logInt)
-        print 'shift peak: '+str(lags[peakInd])
-        print 'shift peak pixel vel: '+str(peakPixVel)
-        print 'polyfit: ',pFit
-        print 'shift peak fitted: '+str(shiftPeak)
-        print 'shift peak fitted vel: '+str(shiftPeakVel)
+        print('logInt: '+str(logInt))
+        print('shift peak: '+str(lags[peakInd]))
+        print('shift peak pixel vel: '+str(peakPixVel))
+        print('polyfit: ',pFit)
+        print('shift peak fitted: '+str(shiftPeak))
+        print('shift peak fitted vel: '+str(shiftPeakVel))
         pl.plot([lags[peakInd],lags[peakInd]],[0,corr[peakInd]])        
         pl.xlim(lagRange[0],lagRange[1])
         pl.xlabel('Lag (pixels)')

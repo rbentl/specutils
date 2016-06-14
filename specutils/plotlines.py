@@ -5,7 +5,7 @@ import pylab as pl
 import os
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,
-               vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None):
+               vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,axes=None):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -63,7 +63,10 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     ##     totalNames = ['$^{12}\mathrm{CO}$', '$^{13}\mathrm{CO}$', '$^{12}\mathrm{CO}$', '$^{13}\mathrm{CO}$', 'Na I','Na I', '$^{12}\mathrm{CO}$', '$^{12}\mathrm{CO}$','Mg I', 'Ca I', 'Ca I', 'Ca I', 'Fe I',  'Na I', 'Na I','$\mathrm{Br}_{\gamma}$', 'He I', 'He I','Ti I','Si I','Ti I','Al I','Al I','Mg I','Mg I','Si I','Fe I','Ca I','Ca I','Ca I', 'Si I']
 
     # should have a plot already so get the current axes
-    ax = pl.gca()
+    if axes is None:
+        ax = pl.gca()
+    else:
+        ax = axes
     if xlim is None:
         xlim = ax.get_xlim()
     if ylim is None:
@@ -80,18 +83,18 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                 idx = (np.abs(spec_wave - totalLines[i])).argmin()
                 delta = (ylim[1]-ylim[0])*0.04
                 deltaX = (xlim[1]-xlim[0])*0.004
-                pl.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
+                ax.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
-                    pl.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
+                    ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
                 
             else:
-                pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--',alpha=alpha)
+                ax.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--',alpha=alpha)
                 if label:
                     if (i % 2) == 0:
                         yval = (ylim[1]-ylim[0])*0.05+ylim[0]
                     else:
                         yval = (ylim[1]-ylim[0])*0.08+ylim[0]
-                    pl.text(totalLines[i],yval,totalNames[i],rotation='vertical',size=size,va='bottom')
+                    ax.text(totalLines[i],yval,totalNames[i],rotation='vertical',size=size,va='bottom')
                 
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
