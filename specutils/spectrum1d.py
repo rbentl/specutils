@@ -47,7 +47,6 @@ class Spectrum1D(NDData):
         `mask` here will causes the mask from the masked array to be
         ignored.
 
-
     meta : `dict`-like object, optional
         Metadata for this object.  "Metadata" here means all information that
         is included with this object but not part of any other attribute
@@ -62,8 +61,9 @@ class Spectrum1D(NDData):
                       'velocity': {'unit': u.m/u.s}}
 
     @classmethod
-    def from_array(cls, dispersion, flux, dispersion_unit=None, uncertainty=None, mask=None,
-                   meta=None, copy=True,
+    def from_array(cls, dispersion, flux, dispersion_unit=None,
+                   uncertainty=None, mask=None, meta=None, copy=True,
+
                    unit=None):
         """Initialize `Spectrum1D`-object from two `numpy.ndarray` objects
         
@@ -86,7 +86,6 @@ class Spectrum1D(NDData):
             matching that of the data. The values should be ``False`` where the
             data is *valid* and ``True`` when it is not (as for Numpy masked
             arrays).
-
 
         meta : `dict`-like object, optional
             Metadata for this object. "Metadata here means all information that
@@ -125,7 +124,7 @@ class Spectrum1D(NDData):
             flux = flux.copy()
 
         return cls(flux=flux, wcs=spec_wcs, unit=unit, uncertainty=uncertainty,
-                   mask=mask,  meta=meta)
+                   mask=mask, meta=meta)
     
     @classmethod
     def from_table(cls, table, dispersion_column='dispersion',
@@ -160,13 +159,9 @@ class Spectrum1D(NDData):
         else:
             uncertainty = None
 
-
         return cls.from_array(flux=flux.data, dispersion=dispersion.data,
                               uncertainty=uncertainty, dispersion_unit=dispersion.units,
-                              unit=flux.units, mask=table.mask, 
-                              meta=table.meta)
-        
-    
+                              unit=flux.units, mask=table.mask, meta=table.meta)
     
     @classmethod
     def from_ascii(cls, filename, uncertainty=None, mask=None, dtype=np.float, comments='#',
@@ -192,7 +187,7 @@ class Spectrum1D(NDData):
                                   ' documentation')
 
     def __init__(self, flux, wcs, unit=None, uncertainty=None, mask=None,
-                  meta=None, indexer=None):
+                 meta=None, indexer=None):
 
         super(Spectrum1D, self).__init__(data=flux, unit=unit, wcs=wcs, uncertainty=uncertainty,
                    mask=mask, meta=meta)
@@ -233,7 +228,7 @@ class Spectrum1D(NDData):
                 raise ValueError('Attempting to set a new unit for this object'
                                  'this is not allowed by Spectrum1D')
 
-        self.data = flux
+        self._data = flux
 
 
     flux = property(flux_getter, flux_setter)
@@ -396,7 +391,7 @@ class Spectrum1D(NDData):
         """
         
         # We need to slice the following items:
-        # >> disp, flux, error, mask, and flags
+        # >> disp, flux, error, and mask
         # Which are all common NDData objects, therefore I am (perhaps
         # reasonably) assuming that __slice__ will be a NDData base function
         # which we will inherit.
@@ -417,7 +412,6 @@ class Spectrum1D(NDData):
                 new_mask = np.array(new_mask)
         else:
             new_mask = None
-
 
         new_indexer = self.indexer.__getitem__(item)
         new_wcs = self.wcs
