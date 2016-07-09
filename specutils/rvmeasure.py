@@ -36,7 +36,8 @@ def gaussian(p, x, normalize = False):
 
 
 def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
-            oversample = 1, fitRange = None,lagRange = [-20, 20], nPixFit = 3):
+            oversample = 1, fitRange = None,lagRange = [-20, 20], nPixFit = 3,
+            bounds_error=True,replace=None):
     """Measure the relative radial velocity of two spectra using cross
     correlation. Will return the shift of the 2nd spectrum relative to
     the first.
@@ -58,6 +59,10 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
          resolution spectrum to that of the lower resolution one.
     nPixFit: number of points around either side of the correlation
              peak to fit (default: 3).
+    bounds_error : will raise an error if interpolating out the
+                   range (Default: True)
+    replace : value to replace the flux when interpolating out of bounds.
+              Will be the  median of the flux if None. Default: None
     
     Returns:
     ---------
@@ -99,8 +104,11 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     if (len(waveIn2) != len(waveIn1)) or (np.sum(waveIn2 - waveIn1) != 0):
         # interpolate the wavelength locations of the second spectrum
         # to the location of the first they are not the same
-        
-        f = interpolate.interp1d(waveIn2,specIn2)
+        if replace is None:
+            replace1 = np.nanmedian(specIn2)
+        else:
+            replace1 = replace
+        f = interpolate.interp1d(waveIn2,specIn2,bounds_error=bounds_error,fill_value=replace1)
         specIn2 = f(waveIn1)
         waveIn2 = waveIn1
         if debug:
@@ -117,8 +125,16 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     if debug:
         print 'wave1 start, end', wave1[0],wave1[-1]
         print 'interp wave: ',linWave1[0],linWave1[-1]
-    logInterp1 = interpolate.interp1d(waveIn1,specIn1,bounds_error=False)
-    logInterp2 = interpolate.interp1d(waveIn1,specIn2,bounds_error=False)
+    if replace is None:
+        replace1 = np.nanmedian(specIn1)
+        replace2 = np.nanmedian(specIn2)
+    else:
+        replace1 = replace
+        replace2 = replace
+    logInterp1 = interpolate.interp1d(waveIn1,specIn1,bounds_error=False,
+                                      fill_value=replace1)
+    logInterp2 = interpolate.interp1d(waveIn1,specIn2,bounds_error=False,
+                                      fill_value=replace2)
     logSpec1 = logInterp1(linWave1)
     logSpec2 = logInterp2(linWave1)
 
@@ -194,7 +210,7 @@ def test_rvmeasure():
     pl.plot(wave1,shifted,label='Shifted Fit')
     pl.legend()
 
-def rmcontinuum(wave,flux,order=2,fitRange=None):
+def rmcontinuum(wave,flux,order=2,fitRange=None,locations=None):
     '''
     Removes the continuum an normalize a spectrum by fitting a
     polynomial and dividing the spectrum by it.
