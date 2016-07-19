@@ -85,7 +85,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
             npsfPix = 4*int(delt)+1
             psf = gaussian([1.0,npsfPix/2,delt,0],np.arange(npsfPix),normalize=True)
             if debug:
-                print np.shape(psf)
+                print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn1 = signal.fftconvolve(specIn1,psf,mode='same')
             if debug:
@@ -95,7 +95,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
             npsfPix = 4*int(delt)+1
             psf = gaussian([1.0,npsfPix/2,delt,0],np.arange(npsfPix),normalize=True)
             if debug:
-                print np.shape(psf)
+                print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn2 = signal.fftconvolve(specIn2,psf,mode='same')
             if debug:
@@ -164,12 +164,12 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     shiftPeakVel = -(np.exp(shiftPeak*logInt)-1)*3e5
     
     if debug:
-        print 'logInt: '+str(logInt)
-        print 'shift peak: '+str(lags[peakInd])
-        print 'shift peak pixel vel: '+str(peakPixVel)
-        print 'polyfit: ',pFit
-        print 'shift peak fitted: '+str(shiftPeak)
-        print 'shift peak fitted vel: '+str(shiftPeakVel)
+        print('logInt: '+str(logInt))
+        print('shift peak: '+str(lags[peakInd]))
+        print('shift peak pixel vel: '+str(peakPixVel))
+        print('polyfit: ',pFit)
+        print('shift peak fitted: '+str(shiftPeak))
+        print('shift peak fitted vel: '+str(shiftPeakVel))
         pl.plot([lags[peakInd],lags[peakInd]],[0,corr[peakInd]])        
         pl.xlim(lagRange[0],lagRange[1])
         pl.xlabel('Lag (pixels)')
