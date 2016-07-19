@@ -13,7 +13,7 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
                    clip_lines=False,sigma_clip=False,
                    clip_replace=False,
                    window_len=5,niter=2,sigma=3,stellarlines=None,
-                   stellarclip=None):
+                   stellarclip=None,uncertainty=None):
     '''
     INPUT
     =====
@@ -24,6 +24,7 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
     clip_oh - remove the indices with OH lines (default: False)
     clip_replace - instead of removing the indicies with OH lines,
                    replace them with NaNs (useful for plotting) Default: False
+    uncertainty - fits file containing the uncertainties for each flux value
     '''
     flux = fits.getdata(filename)
 
@@ -49,12 +50,16 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
         wavelength = wavelength.to(u.Unit(desired_wavelength_units))
     else:
         pass
-    
+
+    if uncertainty is not None:
+        rms = fits.getdata(uncertainty)
+        
     if wave_range is not None:
         good = np.where((wavelength.value > wave_range[0]) & (wavelength.value < wave_range[1]))[0]
         wavelength = wavelength[good]
         flux = flux[good]
-
+        if uncertainty is not None:
+            rms = rms[good]
 
     if clip_lines or clip_oh:
         # clip around OH lines
@@ -118,8 +123,9 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
                     if len(good) > 0:
                         flux = flux[good]
                         wavelength = wavelength[good]
-                
-    return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
+                        if uncertainty is not None:
+                            rms = rms[good]
+    return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit,uncertainty = rms)
 
 
 
@@ -253,7 +259,22 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
                    clip_lines=False):
     # read the NIRSPEC dat file returned by redspec
     # enter units
-    pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=3)
+
+    # if the input is a string, then open it and read, otherwise,
+    # iterate over the list and then average
+    if type(datfile) == str:
+        pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=3)
+    else:
+        for ii in xrange(len(datfile)):
+            pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=3)
+            if ii == 0:
+                stack = np.zeros((len(flux),len(datfile)))
+            if len(datfile) > 1:
+                stack[:,ii] = flux
+        if len(datfile) > 1:
+            # take the mean along one axis
+            flux = np.mean(stack,axis=1)
+        
     
     flux = flux * u.Unit(flux_units)
     wavelength = wavelength * u.Unit(wavelength_units)
