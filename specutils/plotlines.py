@@ -5,7 +5,8 @@ import pylab as pl
 import os
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,
-               vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,axes=None):
+               vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
+               linestyle='--'):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -88,13 +89,13 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
                 
             else:
-                ax.plot([totalLines[i],totalLines[i]],ylim,color,linestyle='--',alpha=alpha)
+                pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
                 if label:
                     if (i % 2) == 0:
                         yval = (ylim[1]-ylim[0])*0.05+ylim[0]
                     else:
                         yval = (ylim[1]-ylim[0])*0.08+ylim[0]
-                    ax.text(totalLines[i],yval,totalNames[i],rotation='vertical',size=size,va='bottom')
+                    pl.text(totalLines[i],yval,totalNames[i],rotation='vertical',color=color,size=size,va='bottom')
                 
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):

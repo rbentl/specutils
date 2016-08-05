@@ -507,3 +507,49 @@ def read_fits_spectrum1d(filename, dispersion_unit=None, flux_unit=None):
         raise NotImplementedError("Either the FITS file does not represent a 1D"
                                   " spectrum or the format isn't supported yet")
 
+
+def read_apogee(fitsfile,doppler=0,wave_range=None,aspcap=False,replace=None,mask=True):
+    """ Read an APOGEE spectrum. The data model is described here:
+    http://data.sdss3.org/datamodel/files/APOGEE_REDUX/APRED_VERS/APSTAR_VERS/TELESCOPE/LOCATION_ID/apStar.html
+
+    Optional
+    ========
+    doppler - doppler correction (z = (labmda_observed - lambda_emitted)/lambda_emitted)
+    wave_range - wavelength range to extract (in micron, default: None)
+    aspcap - the spectrum is a best fit ASPCAP spectrum (default: False)
+    mask - replace the bad pixels with NaNs (default: True)
+    replace - a value to replace ones that are zero (defulat: None)
+    """
+
+    hdu =fits.open(fitsfile)
+
+    h = hdu[1].header
+
+    if aspcap:
+        flux = hdu[1].data
+    else:
+        flux = hdu[1].data[0,:] # just take the first form of the combine (pixel weighted)
+
+    pix = np.arange(h['NAXIS1'])+1 # fits start at the first pixel
+    
+    wave = 10.0**((h['CRVAL1']+h['CDELT1']*(pix - h['CRPIX1']))/(1.0+doppler))
+
+    wave = wave/1e4  # convert to microns
+
+    # mask out all bad pixels first
+    if not aspcap:
+        if mask:
+            bad = np.where(hdu[3].data[0,:] == 1)[0]
+            flux[bad] = np.nan
+
+    if wave_range is not None:
+        good = np.where((wave >= wave_range[0]) & (wave <= wave_range[1]))[0]
+        wave = wave[good]
+        flux = flux[good]
+    
+    if replace is not None:
+        bad = np.where(flux == 0)[0]
+        flux[bad] = replace
+    spectrum = Spectrum1D.from_array(wave, flux, dispersion_unit='u.micron')
+    
+    return spectrum
