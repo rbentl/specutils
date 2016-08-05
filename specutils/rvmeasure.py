@@ -36,7 +36,7 @@ def gaussian(p, x, normalize = False):
 
 
 def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
-            oversample = 1, fitRange = None,lagRange = [-20, 20], nPixFit = 3):
+            oversample = 1, fitRange = None,lagRange = [-20.0, 20.0], nPixFit = 3):
     """Measure the relative radial velocity of two spectra using cross
     correlation. Will return the shift of the 2nd spectrum relative to
     the first.
@@ -131,6 +131,11 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     corr = signal.correlate(logSpec1[good]-np.median(logSpec1[good]),logSpec2[good]-np.median(logSpec2[good]),mode='same')
     lags = np.arange(len(good))-len(good)/2
 
+
+    goodlags = np.where((lags >= lagRange[0]) & (lags <= lagRange[1]))[0]
+    corr = corr[goodlags]
+    lags = lags[goodlags]
+
     if debug:
         pl.subplot(122)
         pl.plot(lags,corr)
@@ -154,11 +159,13 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
         print('polyfit: ',pFit)
         print('shift peak fitted: '+str(shiftPeak))
         print('shift peak fitted vel: '+str(shiftPeakVel))
+        print('peak correlation value: '+str(np.max(corr)))
         pl.plot([lags[peakInd],lags[peakInd]],[0,corr[peakInd]])        
-        pl.xlim(lagRange[0],lagRange[1])
+
         pl.xlabel('Lag (pixels)')
         polyFun = np.poly1d(pFit)
         pl.plot(lags[peakInd-nPixFit:peakInd+nPixFit+1],polyFun(lags[peakInd-nPixFit:peakInd+nPixFit+1]),'r')
+        pl.xlim(lagRange[0],lagRange[1])        
     return np.array([shiftPeakVel,shiftPeak,logInt])
 
 def shiftSpec(wave,flux,vel):
@@ -186,13 +193,13 @@ def test_rvmeasure():
         spec1 = spec1+gaussian([1.0,lines1[i],4.0*delt,0],wave1)
         spec2 = spec2+gaussian([1.0,lines2[i],2.0*delt,0],wave1)
 
-    rv = rvshift(wave1,spec1+1.0,wave1,spec2+1.0,debug=True,r1=2000,r2=4000,lagRange=[-100,100],fitRange=[2.1,2.4])
+    rv = rvshift(wave1,spec1+1.0,wave1,spec2+1.0,debug=True,r1=2000,r2=4000,lagRange=[-20,20],fitRange=[2.1,2.4])
     shifted = shiftSpec(wave1*1e4,spec2,-rv[0])
-    pl.clf()
-    pl.plot(wave1,spec1,label='Ref')
-    pl.plot(wave1,spec2,label='Test Spec')
-    pl.plot(wave1,shifted,label='Shifted Fit')
-    pl.legend()
+    ## pl.clf()
+    ## pl.plot(wave1,spec1,label='Ref')
+    ## pl.plot(wave1,spec2,label='Test Spec')
+    ## pl.plot(wave1,shifted,label='Shifted Fit')
+    ## pl.legend()
 
 def rmcontinuum(wave,flux,order=2,fitRange=None):
     '''

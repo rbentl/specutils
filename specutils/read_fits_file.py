@@ -1,5 +1,5 @@
 #from specgrid.fix_spectrum1d import Spectrum1D
-from starkit import Spectrum1D
+from specutils import Spectrum1D
 from astropy.io import fits
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
