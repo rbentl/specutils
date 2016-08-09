@@ -4,9 +4,9 @@ from scipy import interpolate
 import pylab as pl
 import os
 
-def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,
+def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,axes = None,
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
-               linestyle='--'):
+               linestyle='--',arcturus=False):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -28,6 +28,22 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     if (lines is None) and (linelist is None):
         linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list.txt')
 
+    if arcturus:
+        # use the lines from the Arcturus atlas
+        atomic_file = os.path.join(os.path.dirname(__file__),'data/arcturus_atomic_lines.txt')
+        molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')    
+        atomic_lines, atomic_line_names = np.loadtxt(atomic_file,delimiter=',',unpack=True,dtype=str)
+        molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)    
+        atomic_lines = np.array(atomic_lines,dtype=float)-.00001
+        molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
+        molecular_lines = np.array(molecular_lines,dtype=float)
+        molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
+        atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
+        lines = np.append(atomic_lines,molecular_lines)
+        if angstrom:
+            lines = lines*1e4
+        line_names = np.append(atomic_line_names,molecular_line_names)
+        
     if lines is None:
         totalLines, n1, n2 = np.genfromtxt(linelist,unpack=True,dtype=str)
         totalLines = np.array(totalLines,dtype=float)
