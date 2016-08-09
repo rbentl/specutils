@@ -254,6 +254,18 @@ class Spectrum1D(NDData):
 
 
 
+    # The following is taken from starkit/fix_spectrum1d.py
+    def uncertainty_getter(self):
+        return self._uncertainty
+
+    def uncertainty_setter(self, value):
+        if value is None:
+            self._uncertainty = None
+        else:
+            self._uncertainty = u.Quantity(value, self.flux.unit)
+
+    uncertainty = property(uncertainty_getter, uncertainty_setter)
+               
 
     #TODO: let the WCS handle what to do with len(flux)
     @property
