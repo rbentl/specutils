@@ -6,7 +6,7 @@ import os
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,axes = None,
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
-               linestyle='--',arcturus=False):
+               linestyle='--',arcturus=False,earlytype=False):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -24,9 +24,12 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     2014-02-19 -- T. Do
     '''
 
+    if earlytype and (linelist is None):
+        linelist = os.path.join(os.path.dirname(__file__), 'data/earlytype_atomic_lines.txt')
+
 
     if (lines is None) and (linelist is None):
-        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list.txt')
+        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list_reformat.txt')
 
     if arcturus:
         # use the lines from the Arcturus atlas
@@ -45,11 +48,8 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
         line_names = np.append(atomic_line_names,molecular_line_names)
         
     if lines is None:
-        totalLines, n1, n2 = np.genfromtxt(linelist,unpack=True,dtype=str)
+        totalLines, totalNames = np.genfromtxt(linelist,unpack=True,dtype=str,delimiter=',')
         totalLines = np.array(totalLines,dtype=float)
-        totalNames = np.copy(n1)
-        for i in np.arange(len(n1)):
-            totalNames[i] = n1[i]+' '+n2[i]
         if angstrom:
             totalLines = totalLines*1e4
     else:

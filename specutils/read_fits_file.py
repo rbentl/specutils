@@ -125,8 +125,10 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
                         wavelength = wavelength[good]
                         if uncertainty is not None:
                             rms = rms[good]
-    return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit,uncertainty = rms)
-
+    if uncertainty is None:
+        return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
+    else:
+        return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit,uncertainty = rms)
 
 
 
