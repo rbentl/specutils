@@ -30,7 +30,7 @@ def gaussian(p, x, normalize = False):
     else:
         scaleFactor = p[0]
     u = (x - p[1]) / p[2]
-    
+
     return scaleFactor * np.exp(-0.5*u*u) + offset + slope*x
 
 
@@ -64,7 +64,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
                    range (Default: True)
     replace : value to replace the flux when interpolating out of bounds.
               Will be the  median of the flux if None. Default: None
-    
+
     Returns:
     ---------
     Return an array of [velocity, pixel shift, logShift]
@@ -77,9 +77,8 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     specIn2 = np.copy(spec2)
     if debug:
         pl.clf()
-        pl.subplot(121)
-        pl.plot(waveIn1,specIn1/np.mean(specIn1))
-        pl.plot(waveIn2,specIn2/np.mean(specIn2))
+        pl.subplot(211)
+
     if (r1 is not None) and (r2 is not None):
         if r1 > r2:
             delt = wave1[1]/(r2*(wave1[1] - wave1[0]))/(2*np.sqrt(2*np.log(2)))
@@ -89,8 +88,8 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
                 print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn1 = signal.fftconvolve(specIn1,psf,mode='same')
-            if debug:
-                pl.plot(waveIn1,specIn1/np.mean(specIn1))
+        if debug:
+            pl.plot(waveIn1,specIn1/np.mean(specIn1),label='Spectrum 1')
         if r2 > r1:
             delt = wave2[1]/(r1*(wave2[1] - wave2[0]))/(2*np.sqrt(2*np.log(2)))
             npsfPix = 4*int(delt)+1
@@ -99,8 +98,17 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
                 print(np.shape(psf))
             #psf = psf/np.sum(psf)
             specIn2 = signal.fftconvolve(specIn2,psf,mode='same')
-            if debug:
-                pl.plot(waveIn2,specIn2/np.mean(specIn1))
+        if debug:
+            #pl.plot(waveIn2,specIn2/np.mean(specIn1),label='Spectrum 2')
+            pl.xlim(np.min(waveIn1),np.max(waveIn1))
+            pl.xlabel('Wavelength')
+            pl.ylabel('Flux')
+
+    else:
+        if debug:
+            pl.plot(waveIn1,specIn1/np.mean(specIn1))
+            pl.plot(waveIn2,specIn2/np.mean(specIn2))
+            pl.xlim(np.min(waveIn1),np.max(waveIn1))
 
     if (len(waveIn2) != len(waveIn1)) or (np.sum(waveIn2 - waveIn1) != 0):
         # interpolate the wavelength locations of the second spectrum
@@ -112,9 +120,9 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
         f = interpolate.interp1d(waveIn2,specIn2,bounds_error=bounds_error,fill_value=replace1)
         specIn2 = f(waveIn1)
         waveIn2 = waveIn1
-        if debug:
-            pl.plot(waveIn2,specIn2/np.mean(specIn2))
-                 
+#        if debug:
+#            pl.plot(waveIn2,specIn2/np.mean(specIn2))
+
     # convert the wavelengths to be linearly sampled in log
     lWave1 = np.log(waveIn1)
     nW = len(lWave1)
@@ -144,7 +152,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
         good = np.where((linWave1 >= fitRange[0]) & (linWave1 <= fitRange[1]))[0]
     else:
         good = np.arange(len(linWave1))
-    
+
     corr = signal.correlate(logSpec1[good]-np.median(logSpec1[good]),logSpec2[good]-np.median(logSpec2[good]),mode='same')
     lags = np.arange(len(good))-len(good)/2
 
@@ -153,9 +161,7 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
     corr = corr[goodlags]
     lags = lags[goodlags]
 
-    if debug:
-        pl.subplot(122)
-        pl.plot(lags,corr)
+
 
 
     # peak velocity corresponding to the pixel peak
@@ -166,10 +172,15 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
 
     pFit = np.polyfit(lags[peakInd-nPixFit:peakInd+nPixFit+1],corr[peakInd-nPixFit:peakInd+nPixFit+1],2)
     shiftPeak = -pFit[1]/(2*pFit[0])
-    
+
     shiftPeakVel = -(np.exp(shiftPeak*logInt)-1)*3e5
-    
+
+
     if debug:
+        pl.plot(waveIn2/((shiftPeakVel/3e5)+1.0),specIn2/np.mean(specIn2),label='Shifted Spectrum 2')
+        pl.legend()
+        pl.subplot(212)
+        pl.plot(lags,corr)
         print('logInt: '+str(logInt))
         print('shift peak: '+str(lags[peakInd]))
         print('shift peak pixel vel: '+str(peakPixVel))
@@ -177,12 +188,15 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
         print('shift peak fitted: '+str(shiftPeak))
         print('shift peak fitted vel: '+str(shiftPeakVel))
         print('peak correlation value: '+str(np.max(corr)))
-        pl.plot([lags[peakInd],lags[peakInd]],[0,corr[peakInd]])        
+        pl.plot([lags[peakInd],lags[peakInd]],[0,corr[peakInd]])
 
         pl.xlabel('Lag (pixels)')
+        pl.text(lags[peakInd],np.max(corr),'%6.2f km/s ' % (peakPixVel))
         polyFun = np.poly1d(pFit)
-        pl.plot(lags[peakInd-nPixFit:peakInd+nPixFit+1],polyFun(lags[peakInd-nPixFit:peakInd+nPixFit+1]),'r')
-        pl.xlim(lagRange[0],lagRange[1])        
+        peak_val = polyFun(lags[peakInd-nPixFit:peakInd+nPixFit+1])
+        pl.plot(lags[peakInd-nPixFit:peakInd+nPixFit+1],peak_val,'r')
+        pl.xlim(lagRange[0],lagRange[1])
+        pl.tight_layout()
     return np.array([shiftPeakVel,shiftPeak,logInt])
 
 def shiftSpec(wave,flux,vel):
@@ -195,9 +209,9 @@ def shiftSpec(wave,flux,vel):
 
     # linearly interpolate the spectrum back to the original wavelength locations
     interp = interpolate.interp1d(actualWave,flux,bounds_error=False)
-    
+
     return interp(wave)
-    
+
 def test_rvmeasure():
     wave1 = np.linspace(2.0,2.45,num=2000)
     delt = wave1[1]-wave1[0]
@@ -232,7 +246,7 @@ def rmcontinuum(wave,flux,order=2,fitRange=None,locations=None):
     goodPts = np.where((flux != 0) & np.isfinite(flux) & (wave >= fitRange[0]) & (wave <= fitRange[1]))[0]
 
     pFit = np.polyfit(wave[goodPts],flux[goodPts],order)
-    
+
     return flux/np.polyval(pFit,wave)
 
 def snr(wave, flux, fitRange = None,order=2):

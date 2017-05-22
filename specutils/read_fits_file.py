@@ -7,7 +7,7 @@ import numpy as np
 import pylab as plt
 
 def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
-                   wavelength_units = 'Angstrom', 
+                   wavelength_units = 'Angstrom',
                    desired_wavelength_units = 'micron',
                    wave_range=None,clip_oh = False,clip_pix = 2,
                    clip_lines=False,sigma_clip=False,
@@ -30,7 +30,7 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
 
 
     header = fits.getheader(filename)
-    
+
     start_wavelength = header['CRVAL1'] #http://localhost:8888/notebooks/Metallicity%20Analysis.ipynb#
     number_of_bins = header['NAXIS1']
     bin_size = header['CDELT1']
@@ -43,9 +43,9 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
         wavelength, flux = clip_spectrum(wavelength, flux,window_len=window_len,niter=niter,sigma=sigma)
 
     # put in units
-    flux = flux * u.Unit(flux_units)    
+    flux = flux * u.Unit(flux_units)
     wavelength = wavelength * u.Unit(wavelength_units)
-    
+
     if wavelength_units != desired_wavelength_units:
         wavelength = wavelength.to(u.Unit(desired_wavelength_units))
     else:
@@ -53,7 +53,7 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
 
     if uncertainty is not None:
         rms = fits.getdata(uncertainty)
-        
+
     if wave_range is not None:
         good = np.where((wavelength.value > wave_range[0]) & (wavelength.value < wave_range[1]))[0]
         wavelength = wavelength[good]
@@ -107,9 +107,9 @@ def read_fits_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
 
         lines = lines*u.angstrom
         lines = lines.to(wavelength.unit)
-        
+
         deltaLambda = wavelength[1]-wavelength[0] # assume delta lambdas are uniform
-        
+
         if (np.max(lines) >= np.min(lines)) & (np.min(lines) <= np.max(lines)):
             for i in np.arange(len(lines)):
                 if clip_replace:
@@ -141,11 +141,11 @@ def read_irtf_fits_file(filename, flux_unit = 'W / (m^2 micron)', wavelength_uni
     '''
     wavelength = fits.getdata(filename)[0]
     wavelength = wavelength * u.Unit(wavelength_unit)
-    
+
     flux = fits.getdata(filename)[1]
     flux = flux * u.Unit(flux_unit)
     flux_uncertainty = fits.getdata(filename)[2]
-    
+
     if wavelength_unit != desired_wavelength_unit:
         wavelength = wavelength.to(u.Unit(desired_wavelength_unit))
     else:
@@ -158,31 +158,31 @@ def read_irtf_fits_file(filename, flux_unit = 'W / (m^2 micron)', wavelength_uni
         flux_uncertainty = flux_uncertainty[good]
 
     if clip_lines:
-        
+
         stellarlines = np.array([21241.4,21768.8,21901.2,22386.9,22263.4])
         stellarclip = [16,4,4,4,4]  # width to clip for the lines
-        
+
         lines = stellarlines*u.angstrom
         lines = lines.to(wavelength_unit)
         clip_arr = stellarclip
-        
+
         deltaLambda = wavelength[1]-wavelength[0] # assume delta lambdas are uniform
-        
+
         if (np.max(lines) >= np.min(lines)) & (np.min(lines) <= np.max(lines)):
             for i in np.arange(len(lines)):
                 good = np.where((wavelength > lines[i]+clip_arr[i]*deltaLambda) | (wavelength < lines[i]-clip_arr[i]*deltaLambda))[0]
                 if len(good) > 0:
                     flux = flux[good]
                     wavelength = wavelength[good]
-                
+
     spectrum = Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
-    
+
 
     spectrum.uncertainty = flux_uncertainty*flux.unit
 
     return spectrum
 
-def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength_units = 'Angstrom', 
+def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength_units = 'Angstrom',
                    desired_wavelength_units = 'micron',wave_range=None,clip_oh = False,clip_pix = 2,
                    clip_lines=False):
     # read GNIRS template file
@@ -190,13 +190,13 @@ def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength
 
 
     header = fits.getheader(filename)
-    
+
     crval1 = header['CRVAL1'] #http://localhost:8888/notebooks/Metallicity%20Analysis.ipynb#
     number_of_bins = header['NAXIS1']
     bin_size = header['CD1_1']
     crpix = header['CRPIX1']
     start_wavelength = crval1 + (1.0 - crpix)*bin_size
-    
+
     end_wavelength = start_wavelength + (number_of_bins-1) * bin_size
 
     wavelength = np.linspace(start_wavelength, end_wavelength, number_of_bins)
@@ -205,12 +205,12 @@ def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength
     # enter units
     flux = flux * u.Unit(flux_units)
     wavelength = wavelength * u.Unit(wavelength_units)
-    
+
     if wavelength_units != desired_wavelength_units:
         wavelength = wavelength.to(u.Unit(desired_wavelength_units))
     else:
         pass
-    
+
     if wave_range is not None:
         good = np.where((wavelength.value > wave_range[0]) & (wavelength.value < wave_range[1]))[0]
         wavelength = wavelength[good]
@@ -244,31 +244,39 @@ def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength
 
         lines = lines*u.angstrom
         lines = lines.to(wavelength.unit)
-        
+
         deltaLambda = wavelength[1]-wavelength[0] # assume delta lambdas are uniform
-        
+
         if (np.max(lines) >= np.min(lines)) & (np.min(lines) <= np.max(lines)):
             for i in np.arange(len(lines)):
                 good = np.where((wavelength > lines[i]+clip_arr[i]*deltaLambda) | (wavelength < lines[i]-clip_arr[i]*deltaLambda))[0]
                 if len(good) > 0:
                     flux = flux[good]
                     wavelength = wavelength[good]
-                
+
     return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
 
-def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_units = 'micron', 
+def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_units = 'micron',
                    desired_wavelength_units = 'micron',wave_range=None,clip_oh = False,clip_pix = 2,
-                   clip_lines=False):
+                   clip_lines=False,single_nod=False):
     # read the NIRSPEC dat file returned by redspec
     # enter units
 
     # if the input is a string, then open it and read, otherwise,
     # iterate over the list and then average
     if type(datfile) == str:
-        pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=3)
+        if single_nod:
+            # for some reason if it's a single nod like cal.dat, then there are
+            # four rows at the top that needs to be skipped
+            pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=4)
+        else:
+            pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=3)
     else:
         for ii in xrange(len(datfile)):
-            pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=3)
+            if single_nod:
+                pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=4)
+            else:
+                pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=3)
             if ii == 0:
                 stack = np.zeros((len(flux),len(datfile)))
             if len(datfile) > 1:
@@ -276,11 +284,11 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
         if len(datfile) > 1:
             # take the mean along one axis
             flux = np.mean(stack,axis=1)
-        
-    
+
+
     flux = flux * u.Unit(flux_units)
     wavelength = wavelength * u.Unit(wavelength_units)
-    
+
     if wave_range is not None:
         print 'clipping', wave_range
         good = np.where((wavelength.value > wave_range[0]) & (wavelength.value < wave_range[1]))[0]
@@ -315,9 +323,9 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
 
         lines = lines*u.angstrom
         lines = lines.to(wavelength.unit)
-        
+
         deltaLambda = wavelength[1]-wavelength[0] # assume delta lambdas are uniform
-        
+
         if (np.max(lines) >= np.min(lines)) & (np.min(lines) <= np.max(lines)):
             for i in np.arange(len(lines)):
                 good = np.where((wavelength > lines[i]+clip_arr[i]*deltaLambda) | (wavelength < lines[i]-clip_arr[i]*deltaLambda))[0]
@@ -329,16 +337,16 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
         wavelength = wavelength.to(u.Unit(desired_wavelength_units))
     else:
         pass
-    
+
 
     return Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
-    
+
 def clip_spectrum(wave,flux,window_len=5,niter=3,sigma=3):
     w = np.hanning(window_len)
-    
+
     x = np.copy(flux)
     wavelength = np.copy(wave)
-    
+
     mx = np.median(flux)
 
     for i in xrange(niter-1):
@@ -347,11 +355,11 @@ def clip_spectrum(wave,flux,window_len=5,niter=3,sigma=3):
         smoothed = np.convolve(s,w,mode='same')
         smoothed = smoothed[window_len-1:-window_len+1]
         smoothed = smoothed/np.median(smoothed)
-        diff = smoothed-x        
+        diff = smoothed-x
         good = np.where(np.abs(diff) < 3*np.std(diff))[0]
         x = x[good]
         wavelength = wavelength[good]
-        
+
     return wavelength,x*mx
 
 def test_clip_spectrum():
@@ -383,7 +391,7 @@ def test_clip_lines():
     plt.clf()
     plt.plot(w1,f1)
     plt.plot(w2,f2)
-    
+
 def test_smooth():
     # test sigma clipping spectra
     starfile = '../spectra/tests/E7_1_018.fits'
@@ -395,7 +403,7 @@ def test_smooth():
     w = np.hanning(window_len)
     #smoothed = np.convolve(specObj2.flux.value,w,mode='valid')
     x = specObj2.flux.value
-    
+
     s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
 
     smoothed = np.convolve(s,w,mode='same')
@@ -417,3 +425,50 @@ def test_smooth():
     good = np.where(np.abs(diff) < 3*np.std(diff))[0]
     plt.plot(specObj2.wavelength[good],diff[good])
 
+def read_bosz_fits_file(filename, flux_unit = 'W / (m^2 micron)', wavelength_unit = 'Angstrom', desired_wavelength_unit = 'micron',wave_range=None,clip_lines=False,stellarlines = np.array([21241.4,21768.8,21901.2,22386.9,22263.4]),
+stellarclip = [16,4,4,4,4]):
+
+    '''
+    Optional Keywords
+    =================
+    clip_lines - remove some of the lines
+    '''
+    hdu = fits.open(filename)
+    spec_tab = hdu[1].data
+
+    #In [3]: spec=hdu[1].data
+
+    #In [4]: plot(spec['Wavelength'],spec['SpecificIntensity'])
+    wavelength = spec_tab['Wavelength']
+    wavelength = wavelength * u.Unit(wavelength_unit)
+
+    flux = spec_tab['SpecificIntensity']
+    flux = flux * 4*np.pi*u.Unit(flux_unit)
+
+    if wavelength_unit != desired_wavelength_unit:
+        wavelength = wavelength.to(u.Unit(desired_wavelength_unit))
+    else:
+        pass
+
+    if wave_range is not None:
+        good = np.where((wavelength.value > wave_range[0]) & (wavelength.value < wave_range[1]))[0]
+        wavelength = wavelength[good]
+        flux = flux[good]
+
+    if clip_lines:
+        lines = stellarlines*u.angstrom
+        lines = lines.to(wavelength_unit)
+        clip_arr = stellarclip
+
+        deltaLambda = wavelength[1]-wavelength[0] # assume delta lambdas are uniform
+
+        if (np.max(lines) >= np.min(lines)) & (np.min(lines) <= np.max(lines)):
+            for i in np.arange(len(lines)):
+                good = np.where((wavelength > lines[i]+clip_arr[i]*deltaLambda) | (wavelength < lines[i]-clip_arr[i]*deltaLambda))[0]
+                if len(good) > 0:
+                    flux = flux[good]
+                    wavelength = wavelength[good]
+
+    spectrum = Spectrum1D.from_array(wavelength, flux.value, dispersion_unit = wavelength.unit, unit = flux.unit)
+    hdu.close()
+    return spectrum
