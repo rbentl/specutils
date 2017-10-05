@@ -6,7 +6,7 @@ import os
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,axes = None,
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
-               linestyle='--',arcturus=False,earlytype=False):
+               linestyle='--',arcturus=False,earlytype=False,molecules=True):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -19,7 +19,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     linelist -- a file with the list of lines and names to plot
     angstrom -- by default the lines are in microns. Set this keyword to
                 switch to angstroms
-
+    molecules - include molecules in the plot from the arcturus line list
     HISTORY:
     2014-02-19 -- T. Do
     '''
@@ -34,19 +34,23 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     if arcturus:
         # use the lines from the Arcturus atlas
         atomic_file = os.path.join(os.path.dirname(__file__),'data/arcturus_atomic_lines.txt')
-        molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')    
+        molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')
         atomic_lines, atomic_line_names = np.loadtxt(atomic_file,delimiter=',',unpack=True,dtype=str)
-        molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)    
+        molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)
         atomic_lines = np.array(atomic_lines,dtype=float)-.00001
         molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
         molecular_lines = np.array(molecular_lines,dtype=float)
         molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
         atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
-        lines = np.append(atomic_lines,molecular_lines)
+        if molecules:
+            lines = np.append(atomic_lines,molecular_lines)
+            line_names = np.append(atomic_line_names,molecular_line_names)
+        else:
+            lines = atomic_lines
+            line_names = atomic_line_names
         if angstrom:
             lines = lines*1e4
-        line_names = np.append(atomic_line_names,molecular_line_names)
-        
+
     if lines is None:
         totalLines, totalNames = np.genfromtxt(linelist,unpack=True,dtype=str,delimiter=',')
         totalLines = np.array(totalLines,dtype=float)
@@ -65,9 +69,9 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     ##     hlinesNames = [r'HI (Pa $\delta$)', r'HI (Pa $\gamma$)',r'HI (Pa $\beta$)',
     ##                    'HI', 'HI', 'HI', 'HI','HI','HI',r'HI (Pa $\alpha$)',
     ##                    'HI (Br $\delta$)']
-    ##     helines = np.array([1.01264, 1.0833,1.16296, 1.16764,1.69230,1.70076])        
+    ##     helines = np.array([1.01264, 1.0833,1.16296, 1.16764,1.69230,1.70076])
     ##     helinesNames = ['HeII', 'HeI','HeII','HeII','HeII','HeI','HeII']
-        
+
     ##     if angstrom:
     ##         hlines = hlines*1e4
     ##         helines = helines*1e4
@@ -91,9 +95,9 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
 
     # shift according to the velocity
     totalLines = vel/3e5*totalLines+totalLines
-    
+
     goodRange = np.where((totalLines >= xlim[0]) & (totalLines <= xlim[1]))[0]
-    
+
     if len(goodRange) > 0:
         for i in goodRange:
             if (spec_wave is not None) & (spec_flux is not None):
@@ -103,7 +107,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                 ax.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
                     ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
-                
+
             else:
                 pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
                 if label:
@@ -112,13 +116,13 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     else:
                         yval = (ylim[1]-ylim[0])*0.08+ylim[0]
                     pl.text(totalLines[i],yval,totalNames[i],rotation='vertical',color=color,size=size,va='bottom')
-                
+
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
     '''
     Plot OH skylines
     '''
-    
+
     if band == 'Y':
         lines = np .array([
               9793.6294 , 9874.84889 , 9897.54143 , 9917.43821 , 10015.6207 ,
@@ -147,7 +151,7 @@ def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='
                 17248.5646 , 17282.8514 , 17330.8089 , 17386.0403 , 17427.0418 ,
                 17449.9205 , 17505.7497 , 17653.0464 , 17671.843 , 17698.7879 ,
                 17811.3826 , 17880.341 ])
-  
+
 
     if band == 'J':
         lines = np.array([
@@ -204,4 +208,3 @@ def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='
     if len(goodRange) > 0:
         for i in goodRange:
             pl.plot([lines[i],lines[i]],ylim,color)
-    
