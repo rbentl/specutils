@@ -3,10 +3,11 @@ from scipy import signal
 from scipy import interpolate
 import pylab as pl
 import os
+from matplotlib.font_manager import FontProperties
 
 def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,axes = None,
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
-               linestyle='--',arcturus=False,earlytype=False,molecules=True):
+               linestyle='--',arcturus=False,earlytype=False,highlight=[],highlight_color='red',molecules=True):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -19,7 +20,9 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     linelist -- a file with the list of lines and names to plot
     angstrom -- by default the lines are in microns. Set this keyword to
                 switch to angstroms
-    molecules - include molecules in the plot from the arcturus line list
+    molecules -- use molecules from arcturus line list
+    highlight -- list of elements to highlight in bold
+
     HISTORY:
     2014-02-19 -- T. Do
     '''
@@ -93,6 +96,9 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     if ylim is None:
         ylim = ax.get_ylim()
 
+    # get font properties
+    font0 = FontProperties()
+    font1 = font0.copy()
     # shift according to the velocity
     totalLines = vel/3e5*totalLines+totalLines
 
@@ -104,9 +110,17 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                 idx = (np.abs(spec_wave - totalLines[i])).argmin()
                 delta = (ylim[1]-ylim[0])*0.04
                 deltaX = (xlim[1]-xlim[0])*0.004
+
                 ax.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
-                    ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom')
+                    if totalNames[i] in highlight:
+                        weight = 'bold'
+                    else:
+                        weight = 'normal'
+                    font1.set_weight(weight)
+
+
+                    ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom',fontproperties=font1)
 
             else:
                 pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
@@ -115,7 +129,14 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                         yval = (ylim[1]-ylim[0])*0.05+ylim[0]
                     else:
                         yval = (ylim[1]-ylim[0])*0.08+ylim[0]
-                    pl.text(totalLines[i],yval,totalNames[i],rotation='vertical',color=color,size=size,va='bottom')
+                    if totalNames[i].strip('$') in highlight:
+                        outstr = r'$\mathbf{'+totalNames[i].strip('$')+'}$'
+                        outcolor = highlight_color
+                    else:
+                        outstr = totalNames[i]
+                        outcolor = color
+
+                    pl.text(totalLines[i],yval,outstr,rotation='vertical',color=outcolor,size=size,va='bottom')
 
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
