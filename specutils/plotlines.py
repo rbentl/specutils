@@ -108,19 +108,22 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
         for i in goodRange:
             if (spec_wave is not None) & (spec_flux is not None):
                 idx = (np.abs(spec_wave - totalLines[i])).argmin()
-                delta = (ylim[1]-ylim[0])*0.04
-                deltaX = (xlim[1]-xlim[0])*0.004
+                delta = (ylim[1]-ylim[0])*0.08
+                deltaX = (xlim[1]-xlim[0])*0.006
 
                 ax.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
-                    if totalNames[i] in highlight:
+
+                    if totalNames[i].strip('$I ') in highlight:
                         weight = 'bold'
+                        outcolor = highlight_color                        
                     else:
                         weight = 'normal'
+                        outcolor = color
                     font1.set_weight(weight)
 
 
-                    ax.text(totalLines[i]+deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom',fontproperties=font1)
+                    ax.text(totalLines[i]-deltaX,spec_flux[idx]-3.25*delta,totalNames[i],rotation='vertical',size=size,va='bottom',fontproperties=font1,color=outcolor)
 
             else:
                 pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
@@ -132,11 +135,13 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     if totalNames[i].strip('$') in highlight:
                         outstr = r'$\mathbf{'+totalNames[i].strip('$')+'}$'
                         outcolor = highlight_color
+                        weight = 'bold'                        
                     else:
                         outstr = totalNames[i]
                         outcolor = color
-
-                    pl.text(totalLines[i],yval,outstr,rotation='vertical',color=outcolor,size=size,va='bottom')
+                        weight = 'normal'
+                    font1.set_weight(weight)                        
+                    pl.text(totalLines[i],yval,outstr,rotation='vertical',color=outcolor,size=size,va='bottom',fontproperties=font1)
 
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
