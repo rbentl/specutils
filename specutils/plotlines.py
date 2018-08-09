@@ -5,9 +5,11 @@ import pylab as pl
 import os
 from matplotlib.font_manager import FontProperties
 
-def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,label=True,size=14,axes = None,
+def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,
+               label=True,size=14,axes = None,rotation='vertical',
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
-               linestyle='--',arcturus=False,earlytype=False,highlight=[],highlight_color='red',molecules=True, offsets=[]):
+               linestyle='--',arcturus=False,earlytype=False,highlight=[],
+               highlight_color='red',molecules=True, offsets=[],xoffset=0):
     '''
     Overplots lines on top of a spectrum. Can select between different
     filters.  If there is a currently open plot, will try to detect
@@ -110,15 +112,18 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
         for i in goodRange:
             if (spec_wave is not None) & (spec_flux is not None):
                 idx = (np.abs(spec_wave - totalLines[i])).argmin()
-                delta = (ylim[1]-ylim[0])*0.04
-                deltaX = (xlim[1]-xlim[0])*0.004
+                delta = (ylim[1]-ylim[0])*0.08
+                deltaX = (xlim[1]-xlim[0])*0.006
 
                 ax.plot([totalLines[i],totalLines[i]],[spec_flux[idx]-delta,spec_flux[idx]-2*delta],color,alpha=alpha)
                 if label:
-                    if totalNames[i] in highlight:
+
+                    if totalNames[i].strip('$I ') in highlight:
                         weight = 'bold'
+                        outcolor = highlight_color
                     else:
                         weight = 'normal'
+                        outcolor = color
                     font1.set_weight(weight)
 
                     yval = spec_flux[idx]-3.25*delta
@@ -127,7 +132,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                         yval += cur_offset_val
                     else:
                         print 'a', j, offset_ids
-                    ax.text(totalLines[i]+deltaX,yval ,totalNames[i],rotation='vertical',size=size,va='bottom',fontproperties=font1)
+                    ax.text(totalLines[i]+deltaX+xoffset,yval ,totalNames[i],rotation=rotation,size=size,va='bottom',fontproperties=font1)
 
             else:
                 pl.plot([totalLines[i],totalLines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
@@ -139,6 +144,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     if totalNames[i].strip('$') in highlight:
                         outstr = r'$\mathbf{'+totalNames[i].strip('$')+'}$'
                         outcolor = highlight_color
+                        weight = 'bold'
                     else:
                         outstr = totalNames[i]
                         outcolor = color
@@ -147,7 +153,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                         yval += cur_offset_val
                         print j, "adding offset", cur_offset_val, yval
 
-                    pl.text(totalLines[i],yval,outstr,rotation='vertical',color=outcolor,size=size,va='bottom', horizontalalignment='center', bbox=dict(facecolor='none', edgecolor='none'))
+                    pl.text(totalLines[i]+xoffset,yval,outstr,rotation=rotation,color=outcolor,size=size,va='bottom', horizontalalignment='center', bbox=dict(facecolor='none', edgecolor='none'))
             j+=1
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):

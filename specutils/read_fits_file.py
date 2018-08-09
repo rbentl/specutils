@@ -269,10 +269,13 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
     skip - the number of rows to skip (if different than the standard redspec output)
     '''
     if type(datfile) == str:
+
         if single_nod:
+            if skip is None:
+                skip =4
             # for some reason if it's a single nod like cal.dat, then there are
             # four rows at the top that needs to be skipped
-                
+
             pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=skip,usecols=[0,1,2])
         else:
             if skip is None:
@@ -283,12 +286,12 @@ def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_
             if single_nod:
                 if skip is None:
                     skip = 4
-                
+
                 pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=skip,usecols=[0,1,2])
             else:
                 if skip is None:
                     skip = 3
-                
+
                 pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=skip)
             if ii == 0:
                 stack = np.zeros((len(flux),len(datfile)))
