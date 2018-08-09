@@ -258,25 +258,38 @@ def read_gnirs_file(filename, flux_units = 'erg / (cm^2 s Angstrom)', wavelength
 
 def read_nirspec_dat(datfile,flux_units = 'erg / (cm^2 s Angstrom)', wavelength_units = 'micron',
                    desired_wavelength_units = 'micron',wave_range=None,clip_oh = False,clip_pix = 2,
-                   clip_lines=False,single_nod=False):
-    # read the NIRSPEC dat file returned by redspec
-    # enter units
+                     clip_lines=False,single_nod=False,skip=None):
+    '''
+    read the NIRSPEC dat file returned by redspec
+    enter units
 
-    # if the input is a string, then open it and read, otherwise,
-    # iterate over the list and then average
+    if the input is a string, then open it and read, otherwise,
+    iterate over the list and then average
+
+    skip - the number of rows to skip (if different than the standard redspec output)
+    '''
     if type(datfile) == str:
         if single_nod:
             # for some reason if it's a single nod like cal.dat, then there are
             # four rows at the top that needs to be skipped
-            pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=4)
+                
+            pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=skip,usecols=[0,1,2])
         else:
-            pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=3)
+            if skip is None:
+                skip = 3
+            pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile,unpack=True,skiprows=skip)
     else:
         for ii in xrange(len(datfile)):
             if single_nod:
-                pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=4)
+                if skip is None:
+                    skip = 4
+                
+                pix,wavelength,flux= np.loadtxt(datfile,unpack=True,skiprows=skip,usecols=[0,1,2])
             else:
-                pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=3)
+                if skip is None:
+                    skip = 3
+                
+                pix,wavelength,flux,nod1,nod2,nod2_nod1 = np.loadtxt(datfile[ii],unpack=True,skiprows=skip)
             if ii == 0:
                 stack = np.zeros((len(flux),len(datfile)))
             if len(datfile) > 1:
