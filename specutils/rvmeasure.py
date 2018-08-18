@@ -232,20 +232,32 @@ def test_rvmeasure():
     ## pl.plot(wave1,shifted,label='Shifted Fit')
     ## pl.legend()
 
-def rmcontinuum(wave,flux,order=2,fitRange=None,locations=None):
+def rmcontinuum(wave,flux,order=2,fitRange=None,locations=None,maskRange=None):
     '''
     Removes the continuum an normalize a spectrum by fitting a
     polynomial and dividing the spectrum by it.
 
+    fitRange - range of wavelengths to fit
+    maskRange - range of wavelengths to mask from the fit
+
     2014-02-20 - T. Do
     '''
 
+
+    if mask is not None:
+        bad = np.where((wave >= maskRange[0]) & (wave <= maskRange[1]))[0]
+        if len(bad) > 0:
+            flux2 = np.delete(flux,bad)
+            wave2 = np.delete(wave,bad)
+    else:
+        wave2 = wave
+        flux2 = flux
     # only fit points that are finite and not zero
     if fitRange is None:
-        fitRange = [np.min(wave),np.max(wave)]
-    goodPts = np.where((flux != 0) & np.isfinite(flux) & (wave >= fitRange[0]) & (wave <= fitRange[1]))[0]
-
-    pFit = np.polyfit(wave[goodPts],flux[goodPts],order)
+        fitRange = [np.min(wave),np.max(wave2)]
+    goodPts = np.where((flux2 != 0) & np.isfinite(flux2) & (wave2 >= fitRange[0]) & (wave2 <= fitRange[1]))[0]
+            
+    pFit = np.polyfit(wave2[goodPts],flux2[goodPts],order)
 
     return flux/np.polyval(pFit,wave)
 
