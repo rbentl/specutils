@@ -156,7 +156,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     pl.text(totalLines[i]+xoffset,yval,outstr,rotation=rotation,color=outcolor,size=size,va='bottom', horizontalalignment='center', bbox=dict(facecolor='none', edgecolor='none'))
             j+=1
 
-def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False):
+def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False,linestyle='--',alpha=1.0):
     '''
     Plot OH skylines
     '''
@@ -245,4 +245,4 @@ def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='
     goodRange = np.where((lines >= xlim[0]) & (lines <= xlim[1]))[0]
     if len(goodRange) > 0:
         for i in goodRange:
-            pl.plot([lines[i],lines[i]],ylim,color)
+            pl.plot([lines[i],lines[i]],ylim,color,linestyle=linestyle,alpha=alpha)
