@@ -244,11 +244,14 @@ def rmcontinuum(wave,flux,order=2,fitRange=None,locations=None,maskRange=None):
     '''
 
 
-    if mask is not None:
+    if maskRange is not None:
         bad = np.where((wave >= maskRange[0]) & (wave <= maskRange[1]))[0]
         if len(bad) > 0:
             flux2 = np.delete(flux,bad)
             wave2 = np.delete(wave,bad)
+        else:
+            wave2 = wave
+            flux2 = flux
     else:
         wave2 = wave
         flux2 = flux
