@@ -132,8 +132,8 @@ def rvshift(wave1, spec1, wave2, spec2, r1 = None, r2 = None, debug = False,
                                       # the new log array
     # the wavelength samples of both spectra should be the same now
     if debug:
-        print 'wave1 start, end', wave1[0],wave1[-1]
-        print 'interp wave: ',linWave1[0],linWave1[-1]
+        print('wave1 start, end', wave1[0],wave1[-1])
+        print('interp wave: ',linWave1[0],linWave1[-1])
     if replace is None:
         replace1 = np.nanmedian(specIn1)
         replace2 = np.nanmedian(specIn2)

@@ -131,7 +131,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                         cur_offset_val = offset_vals[offset_ids.index(j)]
                         yval += cur_offset_val
                     else:
-                        print 'a', j, offset_ids
+                        print('a', j, offset_ids)
                     ax.text(totalLines[i]+deltaX+xoffset,yval ,totalNames[i],rotation=rotation,size=size,va='bottom',fontproperties=font1)
 
             else:
@@ -151,7 +151,7 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
                     if j in offset_ids:
                         cur_offset_val = offset_vals[offset_ids.index(j)]
                         yval += cur_offset_val
-                        print j, "adding offset", cur_offset_val, yval
+                        print(j, "adding offset", cur_offset_val, yval)
 
                     pl.text(totalLines[i]+xoffset,yval,outstr,rotation=rotation,color=outcolor,size=size,va='bottom', horizontalalignment='center', bbox=dict(facecolor='none', edgecolor='none'))
             j+=1
