@@ -5,7 +5,7 @@ import pylab as pl
 import os
 from matplotlib.font_manager import FontProperties
 
-def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,ylim=None,
+def oplotlines(linelist=None,angstrom=False,color='k',xlim=None,ylim=None,
                label=True,size=14,axes = None,rotation='vertical',
                vel=0.0,spec_wave=None,spec_flux=None,alpha=1.0,lines = None, line_names = None,
                linestyle='--',arcturus=False,earlytype=False,highlight=[],
@@ -16,7 +16,6 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     the wavelength range appropriate for plotting.
 
     Optional Keywords:
-    bandname -- name of the filter to plot (default: None)
     lines -- an array of line positions to plot (optional)
     line_names -- corresponding name of the lines (optional)
     linelist -- a file with the list of lines and names to plot
@@ -29,44 +28,48 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
     2014-02-19 -- T. Do
     '''
 
-    if earlytype and (linelist is None):
-        linelist = os.path.join(os.path.dirname(__file__), 'data/earlytype_atomic_lines.txt')
+    # if earlytype and (linelist is None):
+    #     linelist = os.path.join(os.path.dirname(__file__), 'data/earlytype_atomic_lines.txt')
 
 
-    if (lines is None) and (linelist is None):
-        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list_reformat.txt')
+    # if (lines is None) and (linelist is None):
+    #     linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list_reformat.txt')
 
-    if arcturus:
-        # use the lines from the Arcturus atlas
-        atomic_file = os.path.join(os.path.dirname(__file__),'data/arcturus_atomic_lines.txt')
-        molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')
-        atomic_lines, atomic_line_names = np.loadtxt(atomic_file,delimiter=',',unpack=True,dtype=str)
-        molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)
-        atomic_lines = np.array(atomic_lines,dtype=float)-.00001
-        molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
-        molecular_lines = np.array(molecular_lines,dtype=float)
-        molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
-        atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
-        if molecules:
-            lines = np.append(atomic_lines,molecular_lines)
-            line_names = np.append(atomic_line_names,molecular_line_names)
-        else:
-            lines = atomic_lines
-            line_names = atomic_line_names
-        if angstrom:
-            lines = lines*1e4
+    # if arcturus:
+    #     # use the lines from the Arcturus atlas
+    #     atomic_file = os.path.join(os.path.dirname(__file__),'data/arcturus_atomic_lines.txt')
+    #     molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')
+    #     atomic_lines, atomic_line_names = np.loadtxt(atomic_file,delimiter=',',unpack=True,dtype=str)
+    #     molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)
+    #     atomic_lines = np.array(atomic_lines,dtype=float)-.00001
+    #     molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
+    #     molecular_lines = np.array(molecular_lines,dtype=float)
+    #     molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
+    #     atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
+    #     if molecules:
+    #         lines = np.append(atomic_lines,molecular_lines)
+    #         line_names = np.append(atomic_line_names,molecular_line_names)
+    #     else:
+    #         lines = atomic_lines
+    #         line_names = atomic_line_names
+    #     if angstrom:
+    #         lines = lines*1e4
 
-    if lines is None:
-        totalLines, totalNames = np.genfromtxt(linelist,unpack=True,dtype=str,delimiter=',')
-        totalLines = np.array(totalLines,dtype=float)
-        if angstrom:
-            totalLines = totalLines*1e4
-    else:
-        totalLines = lines
-        if line_names is None:
-            totalNames = np.full(len(totalLines),'',dtype=str)
-        else:
-            totalNames = line_names
+    # if lines is None:
+    #     totalLines, totalNames = np.genfromtxt(linelist,unpack=True,dtype=str,delimiter=',')
+    #     totalLines = np.array(totalLines,dtype=float)
+    #     if angstrom:
+    #         totalLines = totalLines*1e4
+    # else:
+    #     totalLines = lines
+    #     if line_names is None:
+    #         totalNames = np.full(len(totalLines),'',dtype=str)
+    #     else:
+    #         totalNames = line_names
+
+    totalLines, totalNames = extract_lines(earlytype=earlytype,linelist=linelist,
+                            arcturus=arcturus,molecules=True,
+                            lines=lines,line_names=line_names,angstrom=angstrom)
 
     ## if linelist is None:
     ##     # hydrogen lines in microns
@@ -155,6 +158,62 @@ def oplotlines(bandname=None,linelist=None,angstrom=False,color='k',xlim=None,yl
 
                     pl.text(totalLines[i]+xoffset,yval,outstr,rotation=rotation,color=outcolor,size=size,va='bottom', horizontalalignment='center', bbox=dict(facecolor='none', edgecolor='none'))
             j+=1
+
+def extract_lines(earlytype=False,linelist=None,arcturus=False,molecules=True,
+    wave_range=None,lines=None,angstrom=True,line_names = None):
+    '''
+    Extract a list of lines given a wavelength range and options for the line list
+    '''
+    if earlytype and (linelist is None):
+        linelist = os.path.join(os.path.dirname(__file__), 'data/earlytype_atomic_lines.txt')
+
+
+    if (lines is None) and (linelist is None):
+        linelist = os.path.join(os.path.dirname(__file__), 'data/rayner_arcturus_atomic_line_list_reformat.txt')
+
+    if arcturus:
+        # use the lines from the Arcturus atlas
+        atomic_file = os.path.join(os.path.dirname(__file__),'data/arcturus_atomic_lines.txt')
+        molecular_file = os.path.join(os.path.dirname(__file__),'data/arcturus_molecular_lines.txt')
+        atomic_lines, atomic_line_names = np.loadtxt(atomic_file,delimiter=',',unpack=True,dtype=str)
+        molecular_lines, molecular_line_names = np.loadtxt(molecular_file,delimiter=',',unpack=True,dtype=str)
+        atomic_lines = np.array(atomic_lines,dtype=float)-.00001
+        molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
+        molecular_lines = np.array(molecular_lines,dtype=float)
+        molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
+        atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
+        if molecules:
+            lines = np.append(atomic_lines,molecular_lines)
+            line_names = np.append(atomic_line_names,molecular_line_names)
+        else:
+            lines = atomic_lines
+            line_names = atomic_line_names
+        if angstrom:
+            lines = lines*1e4
+
+    if lines is None:
+        totalLines, totalNames = np.genfromtxt(linelist,unpack=True,dtype=str,delimiter=',')
+        totalLines = np.array(totalLines,dtype=float)
+        if angstrom:
+            totalLines = totalLines*1e4
+    else:
+        totalLines = lines
+        if line_names is None:
+            totalNames = np.full(len(totalLines),'',dtype=str)
+        else:
+            totalNames = line_names
+    
+    if wave_range is not None:
+        goodRange = np.where((totalLines >= wave_range[0]) & (totalLines <= wave_range[1]))[0]
+        return(totalLines[goodRange],totalNames[goodRange])
+    else:
+        return(totalLines,totalNames)
+
+def test_extract_lines():
+    lines,names = extract_lines(wave_range=[23100,23420])
+    print(lines,names)
+    lines,names = extract_lines(wave_range=[23100,23420],arcturus=True)
+    print(lines,names)    
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False,linestyle='--',alpha=1.0):
     '''
