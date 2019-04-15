@@ -160,7 +160,7 @@ def oplotlines(linelist=None,angstrom=False,color='k',xlim=None,ylim=None,
             j+=1
 
 def extract_lines(earlytype=False,linelist=None,arcturus=False,molecules=True,
-    wave_range=None,lines=None,angstrom=True,line_names = None):
+    wave_range=None,lines=None,angstrom=True,line_names = None,latex=True):
     '''
     Extract a list of lines given a wavelength range and options for the line list
     '''
@@ -180,8 +180,10 @@ def extract_lines(earlytype=False,linelist=None,arcturus=False,molecules=True,
         atomic_lines = np.array(atomic_lines,dtype=float)-.00001
         molecular_lines = np.array(molecular_lines,dtype=float)-0.00001
         molecular_lines = np.array(molecular_lines,dtype=float)
-        molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
-        atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
+        if latex:
+            # add $ to render correctly with latex
+            molecular_line_names = ['$'+lamb+'$' for lamb in molecular_line_names]
+            atomic_line_names = ['$'+lamb+'$' for lamb in atomic_line_names]
         if molecules:
             lines = np.append(atomic_lines,molecular_lines)
             line_names = np.append(atomic_line_names,molecular_line_names)
@@ -212,7 +214,7 @@ def extract_lines(earlytype=False,linelist=None,arcturus=False,molecules=True,
 def test_extract_lines():
     lines,names = extract_lines(wave_range=[23100,23420])
     print(lines,names)
-    lines,names = extract_lines(wave_range=[23100,23420],arcturus=True)
+    lines,names = extract_lines(wave_range=[23100,23420],arcturus=True,latex=False)
     print(lines,names)    
 
 def oplotskylines(band = 'H', linelist = None, xlim = None, ylim = None, color='k',angstrom=False,linestyle='--',alpha=1.0):
