@@ -139,7 +139,7 @@ def read_txt_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
                    clip_lines=False,sigma_clip=False,
                    clip_replace=False,
                    window_len=5,niter=2,sigma=3,stellarlines=None,
-                   stellarclip=None,uncertainty_col=None):
+                   stellarclip=None,uncertainty_col=None,molecfit=False):
     '''
     Read a text file with two columns: wavelength and flux
     INPUT
@@ -152,13 +152,23 @@ def read_txt_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
     clip_replace - instead of removing the indicies with OH lines,
                    replace them with NaNs (useful for plotting) Default: False
     uncertainty_col - if the text file has an uncertainty column, put the number here (starting from zero)
+    molecfit - load a molecfit TAC file
     '''
-
-    if uncertainty_col is not None:
-        wavelength, flux,rms = np.loadtxt(filename,unpack=True,usecols=[0,1,uncertainty_col])
+    if molecfit:
+        # load an _tac.asc file
+        #n, chip, lam, flux, weight, mlam, mtrans, mweight, cflux, qual = np.loadtxt(filename,skiprows=2,dtype=str)
+        t = np.loadtxt(filename,skiprows=2)
+        mlam = t[:,5]
+        cflux = t[:,8]
+        wavelength = np.array(mlam,dtype=float)  # model wavelength
+        flux = np.array(cflux,dtype=float)       # corrected flux
+        wavelength_units = 'micron'
     else:
-        wavelength, flux = np.loadtxt(filename,unpack=True,usecols=[0,1])
-    
+        if uncertainty_col is not None:
+            wavelength, flux,rms = np.loadtxt(filename,unpack=True,usecols=[0,1,uncertainty_col])
+        else:
+            wavelength, flux = np.loadtxt(filename,unpack=True,usecols=[0,1])
+        
     # remove zeros and NaNs
     good = np.where((flux != 0) & np.isfinite(flux))[0]
     wavelength = wavelength[good]
