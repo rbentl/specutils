@@ -139,7 +139,8 @@ def read_txt_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
                    clip_lines=False,sigma_clip=False,
                    clip_replace=False,
                    window_len=5,niter=2,sigma=3,stellarlines=None,
-                   stellarclip=None,uncertainty_col=None,molecfit=False):
+                   stellarclip=None,uncertainty_col=None,molecfit=False,
+                  delimiter=None,**kwargs):
     '''
     Read a text file with two columns: wavelength and flux
     INPUT
@@ -165,9 +166,9 @@ def read_txt_file(filename, flux_units = 'erg / (cm^2 s Angstrom)',
         wavelength_units = 'micron'
     else:
         if uncertainty_col is not None:
-            wavelength, flux,rms = np.loadtxt(filename,unpack=True,usecols=[0,1,uncertainty_col])
+            wavelength, flux,rms = np.loadtxt(filename,unpack=True,usecols=[0,1,uncertainty_col],delimiter=delimiter,**kwargs)
         else:
-            wavelength, flux = np.loadtxt(filename,unpack=True,usecols=[0,1])
+            wavelength, flux = np.loadtxt(filename,unpack=True,usecols=[0,1],delimiter=delimiter,**kwargs)
         
     # remove zeros and NaNs
     good = np.where((flux != 0) & np.isfinite(flux))[0]
