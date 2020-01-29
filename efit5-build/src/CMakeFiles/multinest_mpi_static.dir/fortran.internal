@@ -1,0 +1,10 @@
+# The fortran modules provided by this target.
+provides
+ cnested
+ kmeans_clstr
+ nested
+ posterior
+ priors
+ randomns
+ utils1
+ xmeans_clstr

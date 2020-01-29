@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/u/rbentley/MultiNest/include/multinest.h
+cstring
+-
+
+/u/rbentley/MultiNest/src/example_eggbox_C/eggbox.c
+stdio.h
+-
+stdlib.h
+-
+math.h
+-
+string.h
+-
+float.h
+-
+multinest.h
+/u/rbentley/MultiNest/src/example_eggbox_C/multinest.h
+

@@ -1,0 +1,2 @@
+/opt/local/bin/ar qc /u/rbentley/MultiNest/lib/libmultinest_mpi.a  CMakeFiles/multinest_mpi_static.dir/cwrapper.f90.o CMakeFiles/multinest_mpi_static.dir/kmeans_clstr.f90.o CMakeFiles/multinest_mpi_static.dir/nested.F90.o CMakeFiles/multinest_mpi_static.dir/posterior.F90.o CMakeFiles/multinest_mpi_static.dir/priors.f90.o CMakeFiles/multinest_mpi_static.dir/utils.f90.o CMakeFiles/multinest_mpi_static.dir/utils1.f90.o CMakeFiles/multinest_mpi_static.dir/xmeans_clstr.f90.o
+/opt/local/bin/ranlib /u/rbentley/MultiNest/lib/libmultinest_mpi.a
